@@ -1,61 +1,82 @@
-// import pkg from 'pg';
-const { Pool } = require('pg');
 const request = require('supertest');
-// Import the server.js file
-const server = require('./server');
-// Mock the environment variables
-process.env.PGUSER = 'tunefy';
-process.env.PGHOST = 'localhost';
-process.env.PGDATABASE = 'tunefy_db';
-process.env.PGPASSWORD = 'tunefy_password';
-process.env.PGPORT = '5432';
+const server = require('./server'); // Importamos la API
 
-// describe('server.js', () => {
-//     test('should create a new Pool instance with correct configuration', () => {
+// Mockeamos PostgreSQL con Jest
+jest.mock('pg', () => {
+    const mClient = {
+        query: jest.fn().mockResolvedValue({ rows: [] }), // Devuelve `{ rows: [] }` por defecto
+        release: jest.fn(),
+    };
+    const mPool = {
+        connect: jest.fn().mockResolvedValue(mClient), // Retorna `mClient` cuando se conecta
+        query: jest.fn(),
+        end: jest.fn(),
+    };
+    return { Pool: jest.fn(() => mPool) };
+});
 
-//         // Assert that a new Pool instance is created with the correct configuration
-//         expect(Pool).toHaveBeenCalledWith({
-//             user: process.env.PGUSER,
-//             host: process.env.PGHOST,
-//             database: process.env.PGDATABASE,
-//             password: process.env.PGPASSWORD,
-//             port: 5432,
-//         });
-//     });
-// });
+// Importar `server.js` después del mock para que use la versión mockeada
+const { Pool } = require('pg');
+const mPool = new Pool(); // Obtener el mock real
 
-describe('POST /add-song', () => {
+describe('🎵 API de Canciones', () => {
+    beforeEach(() => {
+        jest.clearAllMocks(); // Limpia los mocks antes de cada test
+    });
+
     it('should insert a new song and verify it with GET /playlist', async () => {
-
-        await request(server)
-            .post('/clear-database')
-            .expect(200);
-
         const songData = {
-            artist_name: 'Test Artist',
-            id: 1,
+            user_id: "1",
+            song_name: "Test Song",
+            artist_name: "Test Artist",
             popularity: 99,
-            song_name: 'Test Song',
-            user_id: '1',
-            votes: 0,
         };
 
-        // Hacer una solicitud POST a /add-song
+        // Simular conexión a la BD
+        const mClient = {
+            query: jest.fn()
+                .mockResolvedValueOnce({ rows: [] }) // Simula base de datos vacía
+                .mockResolvedValueOnce({ rows: [{ ...songData }] }) // Simula la inserción
+                .mockResolvedValueOnce({ rows: [songData] }), // Simula respuesta de `/playlist`
+            release: jest.fn(),
+        };
+        mPool.connect.mockResolvedValue(mClient);
+
         await request(server)
             .post('/add-song')
             .send(songData)
-            .expect(201); // Asegúrate de que tu servidor responde con el código de estado correcto
+            .expect(201);
 
-        // Hacer una solicitud GET a /playlist
+        // Asegurar que `client.query()` devolverá `{ rows: [...] }` antes de llamar a `/playlist`
+        mClient.query.mockResolvedValueOnce({ rows: [songData] });
+
         const response = await request(server)
             .get('/playlist')
-            .expect(200); // Asegúrate de que tu servidor responde con el código de estado correcto
+            .expect(200);
 
-        // Verificar que la canción se agregó a la lista de reproducción
+        expect(mClient.query).toHaveBeenCalledWith(
+            "SELECT * FROM merged_songs ORDER BY popularity DESC LIMIT 10"
+        );
+
         expect(response.body).toEqual([songData]);
+    });
+
+    it('should clear the database successfully', async () => {
+        const mClient = {
+            query: jest.fn().mockResolvedValueOnce({ rowCount: 1 }),
+            release: jest.fn(),
+        };
+        mPool.connect.mockResolvedValue(mClient);
 
         await request(server)
             .post('/clear-database')
             .expect(200);
+
+        expect(mClient.query).toHaveBeenCalledWith("DELETE FROM merged_songs");
     });
+});
+
+//Cerrar conexión al finalizar los tests
+afterAll(() => {
+    mPool.end();
 });
