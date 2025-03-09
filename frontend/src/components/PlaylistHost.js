@@ -7,7 +7,7 @@ const Playlist = ({ songs }) => {
   const fetchVotesAndUpdateSongs = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/votes`
+        "/api/votes"
       );
       if (!response.ok) {
         throw new Error("Failed to fetch votes");

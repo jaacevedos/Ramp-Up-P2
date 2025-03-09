@@ -39,7 +39,7 @@ function HostView() {
   const fetchVotesAndUpdateSongs = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/votes`
+        "/api/votes"
       );
       if (!response.ok) {
         throw new Error("Failed to fetch votes");
@@ -126,7 +126,7 @@ function HostView() {
       const fetchVotes = async () => {
         try {
           const response = await axios.get(
-            `${process.env.REACT_APP_BACKEND_URL}/votes`
+            "/api/votes"
           );
           setVotes(response.data.votes);
         } catch (error) {
@@ -147,7 +147,7 @@ function HostView() {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/create-session`,
+        "/api/create-session",
         {
           method: "POST",
           headers: {
@@ -213,7 +213,7 @@ function HostView() {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/remove-user`,
+        "/api/remove-user",
         {
           sessionId,
           username,
@@ -294,7 +294,7 @@ function HostView() {
 
     try {
       console.log('Trying to remove song by songid: ', songId);
-      const response = await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/songs/${songId}`);
+      const response = await axios.delete(`/api/songs/${songId}`);
       console.log('Song removed successfully', response.data);
     } catch (error) {
       console.error('Error removing song', error);
@@ -314,7 +314,7 @@ function HostView() {
 
   const fetchPlaylist = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/playlist`);
+      const response = await fetch("/api/playlist");
       const data = await response.json();
       setSongs(data.sort((a, b) => b.votes - a.votes));
       console.log("Playlist fetched successfully");
@@ -329,7 +329,7 @@ function HostView() {
     try {
       // Send request to backend to clear database
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/clear-database`,
+        "/api/clear-database",
         {
           method: "POST",
         }

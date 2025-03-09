@@ -8,7 +8,7 @@ const Playlist = ({ onVote }) => {
   const fetchVotes = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/votes`
+        "/api/votes"
       );
       if (!response.ok) {
         throw new Error("Failed to fetch votes");
@@ -36,7 +36,7 @@ const Playlist = ({ onVote }) => {
   }, []);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/playlist`)
+    fetch("/api/playlist")
       .then((response) => response.json())
       .then((data) => {
         setSongs(data);

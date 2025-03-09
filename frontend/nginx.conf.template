@@ -1,0 +1,43 @@
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types; # Asegurar que los MIME types sean correctos
+    server {
+        listen 80;
+
+        # Servir archivos estáticos correctamente
+        location /static/ {
+            root /usr/share/nginx/html;
+            access_log off;
+        }
+
+        # Servir la aplicación React y permitir React Router
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri /index.html;
+        }
+
+        # Redirigir peticiones de /api al backend
+        location /api/ {
+            rewrite ^/api/(.*)$ /$1 break;
+            proxy_pass $REACT_APP_BACKEND_URL;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location /health {
+            proxy_pass $REACT_APP_BACKEND_URL;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}

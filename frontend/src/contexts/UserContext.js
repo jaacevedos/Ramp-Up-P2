@@ -20,7 +20,7 @@ export const UserProvider = ({ children }) => {
             }
 
             const response = await axios.get(
-                `${process.env.REACT_APP_BACKEND_URL}/session-users`,
+                "/api/session-users",
                 {
                     params: {
                         sessionId,

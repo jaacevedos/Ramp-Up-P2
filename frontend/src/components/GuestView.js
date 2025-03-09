@@ -143,7 +143,7 @@ function GuestView() {
       const fetchVotes = async () => {
         try {
           const response = await axios.get(
-            `${process.env.REACT_APP_BACKEND_URL}/votes`
+            "/api/votes"
           );
           setVotes(response.data.votes);
         } catch (error) {
@@ -185,7 +185,7 @@ function GuestView() {
     try {
       console.log("Sending vote to backend...");
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/vote`,
+        "/api/vote",
         {
           method: "POST",
           headers: {
@@ -238,7 +238,7 @@ function GuestView() {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/leave-session`,
+        "/api/leave-session",
         {
           sessionId,
           username,
